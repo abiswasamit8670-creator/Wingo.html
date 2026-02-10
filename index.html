@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WINGO PRO - ULTIMATE AI</title>
+    <style>
+        :root { --primary: #4f46e5; --accent: #6366f1; --gold: #fbbf24; --dark: #0f172a; --green: #10b981; --red: #ef4444; --violet: #a855f7; --card: #1e1e38; }
+        body { background-color: var(--dark); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 450px; background-color: #1a1a2e; min-height: 100vh; position: relative; border: 1px solid #333; overflow-x: hidden; }
+        
+        .header { background: linear-gradient(90deg, #4f46e5, #7c3aed); padding: 18px; text-align: center; font-weight: 900; font-size: 22px; cursor: pointer; user-select: none; }
+        
+        .balance-card { margin: 15px; padding: 20px; background: var(--card); border-radius: 15px; text-align: center; border: 1px solid #333; }
+        .bal-amount { font-size: 32px; font-weight: 800; color: var(--gold); margin: 10px 0; }
+        .btn-row { display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; color: white; transition: 0.3s; }
+
+        .timer-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; }
+        .time-tab { padding: 10px 0; text-align: center; cursor: pointer; border-radius: 8px; font-size: 12px; background: #252545; color: #94a3b8; }
+        .time-tab.active { background: var(--primary); color: #fff; border: 1px solid var(--gold); }
+
+        .timer-display { display: flex; justify-content: space-between; padding: 15px; background: #252545; margin: 10px; border-radius: 15px; border-bottom: 3px solid var(--primary); align-items: center; position: relative; }
+        .t-left { font-size: 26px; color: var(--red); font-weight: 900; font-family: monospace; }
+        #muteBtn { font-size: 20px; cursor: pointer; }
+
+        .color-btns { display: flex; gap: 8px; padding: 10px 15px; }
+        .num-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; padding: 0 15px; margin-bottom: 15px; }
+        .n-btn { height: 40px; border-radius: 50%; border: none; color: white; font-weight: bold; cursor: pointer; }
+        .size-btns { display: flex; gap: 10px; padding: 0 15px; }
+
+        .h-tabs { display: flex; margin-top: 20px; background: #1e1e38; border-bottom: 1px solid #333; }
+        .h-tab { flex: 1; padding: 12px; text-align: center; font-size: 12px; cursor: pointer; color: #888; }
+        .h-tab.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
+        table { width: 100%; border-collapse: collapse; text-align: center; font-size: 12px; }
+        th { padding: 12px; color: #94a3b8; border-bottom: 1px solid #333; }
+        td { padding: 12px; border-bottom: 1px solid #2d2d44; }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: var(--card); width: 100%; max-width: 350px; border-radius: 20px; padding: 20px; position: relative; }
+        .chip-group { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 15px 0; }
+        .chip { padding: 8px 12px; background: #333; border-radius: 5px; cursor: pointer; font-size: 13px; }
+        .chip.active { background: var(--primary); color: #fff; }
+        
+        #bigCount { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.85); border-radius: 15px; align-items: center; justify-content: center; font-size: 100px; font-weight: 900; color: var(--gold); z-index: 100; pointer-events: none; }
+        
+        .input-box { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #0f172a; color: white; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header" id="adminTrigger">WINGO PRO</div>
+
+    <div class="balance-card">
+        <div style="opacity: 0.7; font-size: 14px;">Total Balance</div>
+        <div class="bal-amount">₹ <span id="balance">0.00</span></div>
+        <div class="btn-row">
+            <button class="btn" style="background:var(--green)" onclick="openDeposit()">Deposit</button>
+            <button class="btn" style="background:var(--red)" onclick="openWithdraw()">Withdraw</button>
+        </div>
+    </div>
+
+    <div class="timer-tabs">
+        <div class="time-tab active" onclick="changeMode('W30', 30, this)">30s</div>
+        <div class="time-tab" onclick="changeMode('W60', 60, this)">1min</div>
+        <div class="time-tab" onclick="changeMode('W180', 180, this)">3min</div>
+        <div class="time-tab" onclick="changeMode('W300', 300, this)">5min</div>
+    </div>
+
+    <div class="timer-display">
+        <div id="bigCount">5</div>
+        <div>
+            <span style="font-size:11px; opacity:0.6">Period Number</span><br>
+            <span id="periodDisplay" style="font-weight:bold; color:var(--gold);">---</span>
+        </div>
+        <div class="t-left" id="timerDisplay">00:00</div>
+        <div id="muteBtn" onclick="toggleMute()">🔊</div>
+    </div>
+
+    <div class="color-btns">
+        <button class="btn" style="background:var(--green)" onclick="openBet('Green')">Green</button>
+        <button class="btn" style="background:var(--violet)" onclick="openBet('Violet')">Violet</button>
+        <button class="btn" style="background:var(--red)" onclick="openBet('Red')">Red</button>
+    </div>
+
+    <div class="num-grid" id="numGrid"></div>
+
+    <div class="size-btns">
+        <button class="btn" style="background:#f59e0b" onclick="openBet('Big')">BIG</button>
+        <button class="btn" style="background:#3b82f6" onclick="openBet('Small')">SMALL</button>
+    </div>
+
+    <div class="h-tabs">
+        <div class="h-tab active" onclick="setHT('game', this)">Game History</div>
+        <div class="h-tab" onclick="setHT('bet', this)">My Bets</div>
+        <div class="h-tab" onclick="setHT('trans', this)">Transactions</div>
+    </div>
+    <div id="historyContainer" style="max-height: 350px; overflow-y: auto;">
+        <table><thead id="hHead"></thead><tbody id="hBody"></tbody></table>
+    </div>
+</div>
+
+<div id="depModal" class="modal"><div class="modal-content"><h3>Deposit</h3><div id="depStep1"><input type="number" id="depAmt" class="input-box" placeholder="Min 200"><button class="btn" style="background:var(--primary); width:100%" onclick="generateQR()">Next</button></div><div id="depStep2" style="display:none"><img id="qrImg" style="width:180px; display:block; margin:auto;"><input type="text" id="utrInput" class="input-box" placeholder="12-digit UTR"><button class="btn" style="background:var(--green); width:100%" onclick="submitDeposit()">Submit</button></div><button class="btn" style="background:#444; width:100%; margin-top:10px;" onclick="closeModal('depModal')">Cancel</button></div></div>
+<div id="wdModal" class="modal"><div class="modal-content"><h3>Withdraw</h3><input type="number" id="wdAmt" class="input-box" placeholder="Min 220"><input type="password" id="wdPass" class="input-box" placeholder="Password"><button class="btn" style="background:var(--red); width:100%" onclick="submitWithdraw()">Withdraw</button><button class="btn" style="background:#444; width:100%; margin-top:10px;" onclick="closeModal('wdModal')">Cancel</button></div></div>
+<div id="betModal" class="modal"><div class="modal-content"><h3 id="betTitle">Bet</h3><div class="chip-group" id="amountChips"><div class="chip active" data-val="1">1</div><div class="chip" data-val="10">10</div><div class="chip" data-val="100">100</div><div class="chip" data-val="1000">1000</div></div><div style="margin:15px 0; text-align:center">Qty: <input type="number" id="betQty" value="1" style="width:60px" oninput="updateTotal()"></div><div class="chip-group" id="multChips"><div class="chip active" data-mult="1">X1</div><div class="chip" data-mult="10">X10</div></div><div style="font-size:13px">Total: ₹<span id="totalDisplay">0</span></div><div class="btn-row" style="margin-top:15px"><button class="btn" style="background:#444" onclick="closeModal('betModal')">Cancel</button><button class="btn" style="background:var(--primary)" onclick="placeBet()">Confirm</button></div></div></div>
+<div id="adminModal" class="modal"><div class="modal-content"><h3>Admin</h3><input type="number" id="admNextRes" class="input-box" placeholder="Next Result (0-9)"><button class="btn" style="background:var(--green); width:100%" onclick="saveAdmin()">Set Result</button><button class="btn" style="background:var(--red); width:100%; margin-top:10px" onclick="closeModal('adminModal')">Close</button></div></div>
+<div id="resModal" class="modal"><div class="modal-content" style="text-align:center"><h2 id="resStatus"></h2><p id="resDetail"></p><button class="btn" style="background:var(--primary); width:100%" onclick="closeModal('resModal')">OK</button></div></div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, set, onValue, update, get, push, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyC-c5K1g1tAb5-JmYMPfseB5ARoMIpdgWE",
+        authDomain: "wingo-pro-9926a.firebaseapp.com",
+        databaseURL: "https://wingo-pro-9926a-default-rtdb.firebaseio.com",
+        projectId: "wingo-pro-9926a",
+        storageBucket: "wingo-pro-9926a.firebasestorage.app",
+        messagingSenderId: "176982570251",
+        appId: "1:176982570251:web:c2f20922b55e99eebd9e0e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const userId = "user_101"; 
+    
+    // পরিবর্তিত নতুন ইউপিআই আইডি
+    const myUpi = "Q326809637@ybl"; 
+    const correctWithdrawPass = "1234";
+
+    let curMode = 'W30', curDur = 30, hType = 'game', isMuted = false;
+    let selectedBase = 1, selectedMult = 1, currentPick = '';
+    
+    const beep = new Audio('https://assets.mixkit.co/active_storage/sfx/2861/2861-preview.mp3');
+
+    window.openWithdraw = () => document.getElementById('wdModal').style.display = 'flex';
+    window.submitWithdraw = async () => {
+        const amt = parseFloat(document.getElementById('wdAmt').value);
+        const pass = document.getElementById('wdPass').value;
+        const snap = await get(ref(db, `users/${userId}/bal`));
+        const currentBal = snap.val() || 0;
+        if (amt < 220 || pass !== correctWithdrawPass || currentBal < amt) return alert("Invalid!");
+        await update(ref(db, `users/${userId}`), { bal: currentBal - amt });
+        await push(ref(db, `withdrawRequests`), { userId, amount: amt, status: 'pending', time: Date.now() });
+        await push(ref(db, `transactions/${userId}`), { type: 'Withdraw', amt: -amt, time: Date.now() });
+        alert("Success!"); closeModal('wdModal');
+    };
+
+    window.openDeposit = () => { document.getElementById('depStep1').style.display = 'block'; document.getElementById('depStep2').style.display = 'none'; document.getElementById('depModal').style.display = 'flex'; };
+    window.generateQR = () => {
+        const amt = document.getElementById('depAmt').value;
+        if(amt < 200) return alert("Min 200");
+        document.getElementById('qrImg').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`upi://pay?pa=${myUpi}&am=${amt}`)}`;
+        document.getElementById('depStep1').style.display = 'none'; document.getElementById('depStep2').style.display = 'block';
+    };
+    window.submitDeposit = async () => {
+        const utr = document.getElementById('utrInput').value;
+        const amt = parseFloat(document.getElementById('depAmt').value);
+        if(utr.length < 10) return alert("Invalid UTR");
+        const snap = await get(ref(db, `users/${userId}/bal`));
+        await update(ref(db, `users/${userId}`), { bal: (snap.val() || 0) + amt });
+        await push(ref(db, `transactions/${userId}`), { type: 'Deposit', amt, utr, time: Date.now() });
+        alert("Success!"); closeModal('depModal');
+    };
+
+    const modes = [{id:'W30',d:30},{id:'W60',d:60},{id:'W180',d:180},{id:'W300',d:300}];
+    function initTimers() {
+        setInterval(() => {
+            const now = new Date();
+            const sec = Math.floor(now.getTime() / 1000);
+            const ymd = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0');
+            modes.forEach(m => {
+                const rem = m.d - (sec % m.d);
+                const pId = ymd + String(Math.floor((now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds()) / m.d) + 1).padStart(4, '0');
+                if(m.id === curMode) {
+                    document.getElementById('timerDisplay').innerText = `00:${String(rem).padStart(2,'0')}`;
+                    document.getElementById('periodDisplay').innerText = pId;
+                    
+                    if(rem <= 5 && rem > 0) { 
+                        document.getElementById('bigCount').innerText = rem; 
+                        document.getElementById('bigCount').style.display = 'flex'; 
+                        if(!isMuted) { beep.currentTime = 0; beep.play().catch(()=>{}); }
+                    } else { document.getElementById('bigCount').style.display = 'none'; }
+                }
+                if(rem === 1) processPeriodEnd(m.id, pId);
+            });
+        }, 1000);
+    }
+
+    async function processPeriodEnd(mId, pId) {
+        const resRef = ref(db, `results/${mId}/${pId}`);
+        const snap = await get(resRef);
+        if(!snap.exists()) {
+            let win;
+            const adm = await get(ref(db, `admin/${mId}/next`));
+            if(adm.exists() && adm.val() !== "") { 
+                win = parseInt(adm.val()); 
+                await update(ref(db, `admin/${mId}`), {next: ""}); 
+            } else {
+                const poolSnap = await get(ref(db, `bets_pool/${mId}/${pId}`));
+                if(poolSnap.exists()){
+                    let p = poolSnap.val();
+                    let bigA = p.Big || 0; let smallA = p.Small || 0;
+                    win = (bigA > smallA) ? Math.floor(Math.random()*5) : Math.floor(Math.random()*5)+5;
+                } else { win = Math.floor(Math.random() * 10); }
+            }
+            let clr = (win===0||win===5)?'Violet':(win%2===0?'Red':'Green');
+            await set(resRef, { pId, win, clr, time: Date.now() });
+            if(mId === curMode) { checkResult(pId); loadHistory(); }
+        }
+    }
+
+    window.checkResult = async (pId) => {
+        const snap = await get(ref(db, `bets/${userId}/${curMode}`)); 
+        if(snap.exists()){
+            const resS = await get(ref(db, `results/${curMode}/${pId}`)); const res = resS.val();
+            Object.keys(snap.val()).forEach(async key => {
+                let b = snap.val()[key]; 
+                if(b.pId === pId && b.status === 'pending') {
+                    let win = false; let m = 2;
+                    if(typeof b.pick === 'number' && b.pick === res.win) { win = true; m = 9; } 
+                    else if(b.pick === res.clr) win = true; 
+                    else if(b.pick === 'Big' && res.win >= 5) win = true; 
+                    else if(b.pick === 'Small' && res.win < 5) win = true;
+
+                    if(win) {
+                        let netProfit = parseFloat(((b.amt * m) / 1.042).toFixed(2));
+                        const bal = (await get(ref(db, `users/${userId}/bal`))).val()||0;
+                        await update(ref(db, `users/${userId}`), { bal: bal + netProfit });
+                        await update(ref(db, `bets/${userId}/${curMode}/${key}`), { status: 'win' });
+                        await push(ref(db, `transactions/${userId}`), { type: 'Win', amt: netProfit, pId, time: Date.now() });
+                        showPopup(pId, netProfit, true);
+                    } else {
+                        await update(ref(db, `bets/${userId}/${curMode}/${key}`), { status: 'loss' });
+                        showPopup(pId, b.amt, false);
+                    }
+                }
+            });
+        }
+    };
+
+    window.openBet = (p) => { currentPick = p; document.getElementById('betTitle').innerText = "Bet: "+p; document.getElementById('betModal').style.display='flex'; updateTotal(); };
+    window.updateTotal = () => { let q = parseInt(document.getElementById('betQty').value)||1; let t = selectedBase * q * selectedMult; document.getElementById('totalDisplay').innerText = (t * 1.042).toFixed(2); };
+    window.placeBet = async () => {
+        let q = parseInt(document.getElementById('betQty').value)||1; let t = selectedBase * q * selectedMult; let final = t * 1.042;
+        const bal = (await get(ref(db, `users/${userId}/bal`))).val()||0;
+        if(bal < final) return alert("Low Balance");
+        const pId = document.getElementById('periodDisplay').innerText;
+        await update(ref(db, `users/${userId}`), { bal: bal - final });
+        await push(ref(db, `bets/${userId}/${curMode}`), { pId, pick: currentPick, amt: t, status: 'pending', time: Date.now() });
+        const pRef = ref(db, `bets_pool/${curMode}/${pId}/${currentPick}`);
+        const curP = (await get(pRef)).val()||0; await set(pRef, curP + t);
+        closeModal('betModal');
+    };
+
+    window.setHT = (t, el) => { hType = t; document.querySelectorAll('.h-tab').forEach(x => x.classList.remove('active')); el.classList.add('active'); loadHistory(); };
+    window.loadHistory = async () => {
+        const body = document.getElementById('hBody'); body.innerHTML = "<tr><td>Loading...</td></tr>";
+        const head = document.getElementById('hHead');
+        if(hType === 'game') {
+            head.innerHTML = `<tr><th>Period</th><th>Num</th><th>Color</th><th>Size</th></tr>`;
+            onValue(query(ref(db, `results/${curMode}`), limitToLast(10)), (s) => { if(hType !== 'game') return; body.innerHTML = ""; if(s.exists()){ Object.values(s.val()).reverse().forEach(r => { body.innerHTML += `<tr><td>${r.pId}</td><td style="color:var(--gold)">${r.win}</td><td>${r.clr}</td><td>${r.win>=5?'Big':'Small'}</td></tr>`; }); } });
+        } else if(hType === 'bet') {
+            head.innerHTML = `<tr><th>Period</th><th>Pick</th><th>Amt</th><th>Res</th></tr>`;
+            onValue(query(ref(db, `bets/${userId}/${curMode}`), limitToLast(10)), (s) => { if(hType !== 'bet') return; body.innerHTML = ""; if(s.exists()){ Object.values(s.val()).reverse().forEach(b => { let col = b.status === 'win' ? 'var(--green)' : (b.status==='loss'?'var(--red)':'#fff'); body.innerHTML += `<tr><td>${b.pId}</td><td>${b.pick}</td><td>${b.amt}</td><td style="color:${col}">${b.status}</td></tr>`; }); } });
+        } else if(hType === 'trans') {
+            head.innerHTML = `<tr><th>Time</th><th>Type</th><th>Amt</th></tr>`;
+            onValue(query(ref(db, `transactions/${userId}`), limitToLast(10)), (s) => { if(hType !== 'trans') return; body.innerHTML = ""; if(s.exists()){ Object.values(s.val()).reverse().forEach(t => { let c = t.amt < 0 ? 'var(--red)' : 'var(--green)'; body.innerHTML += `<tr><td>${new Date(t.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td><td>${t.type}</td><td style="color:${c}">${t.amt}</td></tr>`; }); } });
+        }
+    };
+
+    window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+    window.saveAdmin = async () => { let v = document.getElementById('admNextRes').value; if(v !== "") { await update(ref(db, `admin/${curMode}`), {next: parseInt(v)}); alert("Set!"); closeModal('adminModal'); } };
+    window.changeMode = (m, d, el) => { curMode = m; curDur = d; document.querySelectorAll('.time-tab').forEach(t => t.classList.remove('active')); el.classList.add('active'); loadHistory(); };
+    window.toggleMute = () => { isMuted = !isMuted; document.getElementById('muteBtn').innerText = isMuted ? "🔇" : "🔊"; };
+    function showPopup(p, a, w) { document.getElementById('resStatus').innerText = w ? "Win!" : "Loss"; document.getElementById('resStatus').style.color = w ? "var(--green)" : "var(--red)"; document.getElementById('resDetail').innerText = `P: ${p}\nAmt: ₹${a}`; document.getElementById('resModal').style.display = 'flex'; }
+
+    let clicks = 0; document.getElementById('adminTrigger').onclick = () => { clicks++; if(clicks === 3) { clicks = 0; if(prompt("Pass:") === "4444") document.getElementById('adminModal').style.display = 'flex'; } };
+    document.querySelectorAll('#amountChips .chip').forEach(c => c.onclick = () => { document.querySelectorAll('#amountChips .chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); selectedBase = parseInt(c.dataset.val); updateTotal(); });
+    document.querySelectorAll('#multChips .chip').forEach(c => c.onclick = () => { document.querySelectorAll('#multChips .chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); selectedMult = parseInt(c.dataset.mult); updateTotal(); });
+    const grid = document.getElementById('numGrid'); for(let i=0; i<=9; i++) grid.innerHTML += `<button class="n-btn" style="background:${(i===0||i===5)?'var(--violet)':(i%2===0?'var(--red)':'var(--green)')}" onclick="openBet(${i})">${i}</button>`;
+
+    onValue(ref(db, `users/${userId}/bal`), (s) => document.getElementById('balance').innerText = (s.val() || 0).toFixed(2));
+    initTimers(); loadHistory();
+</script>
+</body>
+</html>
